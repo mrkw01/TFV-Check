@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>§27 TFV Spielberechtigung</title>
+    <style>
+        :root {
+            --primary: #0056b3;
+            --primary-hover: #004494;
+            --secondary: #6c757d;
+            --secondary-hover: #5a6268;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            padding: 25px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 1.4rem;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        #question-container {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .hint-box {
+            display: block;
+            font-size: 0.9rem;
+            color: #555;
+            margin-top: 12px;
+            font-weight: normal;
+            background-color: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid var(--primary);
+            text-align: left;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 16px 20px;
+            font-size: 1.05rem;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:hover { background-color: var(--primary-hover); }
+        
+        button.btn-secondary { background-color: var(--secondary); }
+        button.btn-secondary:hover { background-color: var(--secondary-hover); }
+
+        /* Result Styles */
+        .result {
+            display: none;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+        
+        .result.success {
+            display: block;
+            background-color: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .result.danger {
+            display: block;
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        .result h2 { margin-top: 0; display: flex; align-items: center; gap: 10px; font-size: 1.4rem;}
+        
+        .info-alert {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            border-left: 4px solid var(--warning);
+        }
+
+        /* Date Calculator */
+        .date-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .date-inputs label { font-weight: 600; font-size: 0.95rem; }
+        
+        input[type="date"] {
+            padding: 12px;
+            font-size: 1rem;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 5px;
+        }
+
+        #restart-btn {
+            margin-top: 25px;
+            background-color: #212529;
+            justify-content: center;
+        }
+
+        /* Back Button */
+        #back-btn-container {
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            display: none;
+        }
+        
+        #back-btn {
+            background-color: transparent;
+            color: var(--secondary);
+            border: 1px solid #ced4da;
+            padding: 10px 15px;
+            font-size: 0.95rem;
+            justify-content: center;
+        }
+        #back-btn:hover { background-color: #f8f9fa; }
+
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>⚖️ Spielberechtigungs-Check</h1>
+    <div class="subtitle">Interaktiver Assistent für §27 & §12 TFV</div>
+
+    <div id="wizard">
+        <div id="question-container">Lade Frage...</div>
+        <div id="options-container" class="btn-group"></div>
+    </div>
+
+    <div id="date-calculator" style="display: none;">
+        <div id="date-message" style="margin-bottom: 15px; font-weight: bold; text-align: center; color: var(--primary); font-size: 1.2rem;"></div>
+        <div class="date-inputs">
+            <div>
+                <label for="last-match-date">📅 Datum des letzten Spiels:</label>
+                <input type="date" id="last-match-date">
+            </div>
+            <div>
+                <label for="planned-match-date">📅 Datum des geplanten Einsatzes:</label>
+                <input type="date" id="planned-match-date">
+            </div>
+        </div>
+        <button onclick="calculateWaitPeriod()" style="justify-content: center;">⏱️ Wartefrist prüfen</button>
+    </div>
+
+    <div id="result-container" class="result">
+        <h2 id="result-title"></h2>
+        <div id="result-message"></div>
+        <button id="restart-btn" onclick="startWizard()">🔄 Neuen Check starten</button>
+    </div>
+
+    <div id="back-btn-container">
+        <button id="back-btn" onclick="goBack()">⬅ Zurück zum vorherigen Schritt</button>
+    </div>
+</div>
+
+<script>
+    const questionContainer = document.getElementById('question-container');
+    const optionsContainer = document.getElementById('options-container');
+    const wizardDiv = document.getElementById('wizard');
+    const resultContainer = document.getElementById('result-container');
+    const resultTitle = document.getElementById('result-title');
+    const resultMessage = document.getElementById('result-message');
+    const dateCalculatorDiv = document.getElementById('date-calculator');
+    const dateMessage = document.getElementById('date-message');
+    const backBtnContainer = document.getElementById('back-btn-container');
+
+    let requiredWaitDays = 0;
+    let historyStack = []; 
+
+    function goToStep(stepFunc) {
+        historyStack.push(stepFunc);
+        renderCurrentStep();
+    }
+
+    function goBack() {
+        if (historyStack.length > 1) {
+            historyStack.pop(); 
+            renderCurrentStep(); 
+        }
+    }
+
+    function renderCurrentStep() {
+        const currentStepFunc = historyStack[historyStack.length - 1];
+        currentStepFunc(); 
+        backBtnContainer.style.display = (historyStack.length > 1) ? 'block' : 'none';
+    }
+
+    function startWizard() {
+        historyStack = [];
+        document.getElementById('last-match-date').value = '';
+        document.getElementById('planned-match-date').value = '';
+        goToStep(askQ1);
+    }
+
+    function showQuestion(text, options) {
+        wizardDiv.style.display = 'block';
+        resultContainer.className = 'result'; 
+        dateCalculatorDiv.style.display = 'none'; 
+        
+        questionContainer.innerHTML = text;
+        optionsContainer.innerHTML = '';
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.innerHTML = opt.text;
+            if(opt.secondary) btn.className = 'btn-secondary';
+            btn.onclick = opt.action;
+            optionsContainer.appendChild(btn);
+        });
+    }
+
+    function showResult(isAllowed, title, message, infoBox = "") {
+        wizardDiv.style.display = 'none';
+        dateCalculatorDiv.style.display = 'none';
+        resultContainer.className = isAllowed ? 'result success' : 'result danger';
+        
+        let icon = isAllowed ? "✅" : "❌";
+        resultTitle.innerHTML = `${icon} ${title}`;
+        
+        let finalMessage = message;
+        if(infoBox) {
+            finalMessage += `<div class="info-alert">⚠️ <b>Wichtiger Hinweis:</b><br>${infoBox}</div>`;
+        }
+        resultMessage.innerHTML = finalMessage;
+    }
+
+    function askForDates(days) {
+        requiredWaitDays = days;
+        wizardDiv.style.display = 'none';
+        resultContainer.className = 'result'; 
+        dateCalculatorDiv.style.display = 'block';
+        dateMessage.innerText = `⏳ Es gilt eine Wartefrist von ${days} Tag(en)!`;
+        
+        const plannedInput = document.getElementById('planned-match-date');
+        if (!plannedInput.value) {
+            plannedInput.valueAsDate = new Date();
+        }
+    }
+
+    // --- PHASE 1: Grundlagen ---
+    function askQ1() {
+        showQuestion("🟥 Sitzt der Spieler aktuell eine Sperrstrafe ab? (z.B. Rot, Gelb-Rot, Sportgericht)", [
+            { text: "Ja, er ist gesperrt", action: () => goToStep(() => showResult(false, "Nicht spielberechtigt!", "Ziffer 10 Abs. 5: Eine Sperrstrafe ist vorab zu verbüßen.")) },
+            { text: "Nein, keine Sperre aktiv", action: () => goToStep(askQ2), secondary: true }
+        ]);
+    }
+
+    function askQ2() {
+        showQuestion("⚽ Ist das geplante Spiel ein Pflichtspiel?", [
+            { text: "Ja, es geht um Punkte/Pokal", action: () => goToStep(askQ3) },
+            { text: "Nein, Freundschafts-/Testspiel", action: () => goToStep(() => showResult(true, "Spielberechtigt!", "Die Regelungen zu Wartefristen gelten nicht für Freundschaftsspiele.")), secondary: true }
+        ]);
+    }
+
+    // --- PHASE 2: Jugend oder Erwachsene ---
+    function askQ3() {
+        showQuestion("👤 In welchem Altersbereich befindet sich der Spieler grundsätzlich?", [
+            { text: "👦 Nachwuchs (Junioren/Juniorinnen)", action: () => goToStep(askQ4) },
+            { text: "👨 Senior (Männer/Frauen)", action: () => goToStep(askQ7), secondary: true }
+        ]);
+    }
+
+    // --- PHASE 3: Nachwuchs ---
+    function askQ4() {
+        showQuestion("⏰ Hat der Spieler am <b>heutigen Kalendertag</b> bereits ein Spiel absolviert?", [
+            { text: "Ja, er hat heute schon gespielt", action: () => goToStep(askQ4_age) },
+            { text: "Nein", action: () => goToStep(askQ5), secondary: true }
+        ]);
+    }
+
+    function askQ4_age() {
+        showQuestion("🎂 Hat der Spieler das 17. Lebensjahr bereits vollendet (ist also mind. 17 Jahre alt)?", [
+            { text: "Ja (≥ 17 Jahre)", action: () => goToStep(askQ5) },
+            { text: "Nein (Jünger als 17)", action: () => goToStep(() => showResult(false, "Nicht spielberechtigt!", "Ziffer 9 Abs. 1: Spieler unter 17 Jahren dürfen am gleichen Kalendertag nur an einem einzigen Spiel teilnehmen.")), secondary: true }
+        ]);
+    }
+
+    function askQ5() {
+        showQuestion("🏟️ Wo soll der Nachwuchsspieler <b>heute</b> eingesetzt werden?", [
+            { text: "👦 In einer Junioren-Mannschaft", action: () => goToStep(askQ6) },
+            { text: "👨 In einer Senioren-Mannschaft", action: () => goToStep(askQ5_sonderspielrecht), secondary: true }
+        ]);
+    }
+
+    function askQ5_sonderspielrecht() {
+        showQuestion("📜 Besitzt der Spieler ein im DFBnet eingetragenes <b>Sonderspielrecht</b> für den Erwachsenenbereich?", [
+            { text: "Ja, ist offiziell eingetragen", action: () => goToStep(askQ5_art) },
+            { text: "Nein", action: () => goToStep(() => showResult(false, "Nicht spielberechtigt!", "§12 Spielordnung: Junioren dürfen <b>ausschließlich</b> mit einem im DFBnet eingetragenen Sonderspielrecht im Erwachsenenbereich eingesetzt werden.")), secondary: true }
+        ]);
+    }
+
+    function askQ5_art() {
+        showQuestion("🔄 Wie ist das Verhältnis des Spielers zum Senioren-Bereich?", [
+            { text: "Er ist eigentlich Junior und hilft heute bei den Senioren aus (Altersklassenwechsel)", action: () => goToStep(() => showResult(true, "Spielberechtigt!", "Ziffer 6 Abs. 2: Bei einem Altersklassenwechsel entfallen die Wartefristen.", "Wegen der Verwendung des Juniors bei den Senioren darf nach §12 Abs. 8 <b>kein Juniorenspiel</b> dieses Vereins abgesetzt werden!")) },
+            { text: "Er spielt dauerhaft bei den Senioren und wechselt heute z.B. von der 1. in die 2. Männer", action: () => goToStep(askQ7), secondary: true }
+        ]);
+    }
+
+    function askQ6() {
+        showQuestion("🏆 Kam der Spieler in seinem letzten Pflichtspiel in der <b>A- oder B-Junioren-Bundesliga</b> zum Einsatz?", [
+            { text: "Ja, Bundesliga", action: () => goToStep(askQ6_stamm) },
+            { text: "Nein", action: () => goToStep(askQ7), secondary: true }
+        ]);
+    }
+
+    function askQ6_stamm() {
+        showQuestion(`⭐ Hat der Spieler in der Bundesliga bereits <b>Stammspieler-Status</b>?
+            <div class="hint-box">Bedingung: Das 4. Saisonspiel ist absolviert <b>UND</b> er kam in >50% aller Spiele zum Einsatz.</div>`, [
+            { text: "Ja, er hat den Status erreicht", action: () => goToStep(askQ6_benched) },
+            { text: "Nein (Status noch nicht erreicht)", action: () => goToStep(() => askForDates(2)), secondary: true }
+        ]);
+    }
+
+    function askQ6_benched() {
+        showQuestion("🪑 Saß dieser Stammspieler in den letzten 2 Ligaspielen <b>in Folge</b> nur auf der Bank (ohne Einsatz)?", [
+            { text: "Ja (Dadurch Status verloren!)", action: () => goToStep(() => askForDates(2)) },
+            { text: "Nein (Er ist aktiver Stammspieler)", action: () => goToStep(() => showResult(false, "Nicht spielberechtigt!", "Ziffer 10 Abs. 1: Stammspieler einer A-/B-Junioren-Bundesliga-Mannschaft sind für alle unterklassigen Mannschaften ihres Vereins gesperrt.")), secondary: true }
+        ]);
+    }
+
+    // --- PHASE 4: Liga-Wechsel ---
+    function askQ7() {
+        showQuestion(`📈 Soll der Spieler in einer sportlich <b>höheren</b> oder <b>tieferen</b> Mannschaft eingesetzt werden (im Vergleich zu seinem letzten Spiel)?
+            <div class="hint-box">Innerhalb der gleichen Liga zählt:<br>2. ➔ 1. Mannschaft = Höher<br>1. ➔ 2. Mannschaft = Tiefer</div>`, [
+            { text: "⬆️ Höher (oder von 2 in 1)", action: () => goToStep(() => showResult(true, "Spielberechtigt!", "Ziffer 2: Der Einsatz in einer sportlich höherwertigen Mannschaft ist ohne Wartefrist möglich.")) },
+            { text: "⬇️ Tiefer (oder von 1 in 2)", action: () => goToStep(askQ8), secondary: true }
+        ]);
+    }
+
+    function askQ8() {
+        showQuestion("⏱️ Wurde der Spieler in seinem letzten Pflichtspiel (in der höheren Mannschaft) <b>nur eingewechselt</b>?", [
+            { text: "Ja, kam von der Bank", action: () => goToStep(() => showResult(true, "Spielberechtigt!", "Ziffer 4 Abs. 1: Wer im letzten Spiel nur eingewechselt wurde, hat keine neue Wartefrist.", "Falls aus einem früheren Spiel noch eine alte 5-Tage-Frist läuft, wird diese durch die Einwechslung <b>nicht</b> aufgehoben (Ziffer 4 Abs. 2).")) },
+            { text: "Nein, stand in der Startelf", action: () => goToStep(askQ9), secondary: true }
+        ]);
+    }
+
+    function askQ9() {
+        showQuestion(`⭐ Ist der Spieler <b>selbst</b> Stammspieler der höheren Mannschaft?
+            <div class="hint-box">In >50% der Spiele eingesetzt (Einwechslungen zählen mit!). Vor dem 1. Spieltag der neuen Saison zählt die Vorsaison.</div>`, [
+            { text: "Ja, er ist Stammspieler", action: () => goToStep(askQ9_andere) },
+            { text: "Nein, er ist kein Stammspieler", action: () => goToStep(askQ10), secondary: true }
+        ]);
+    }
+
+    function askQ9_andere() {
+        showQuestion("👥 Stehen in der heutigen (tieferen) Mannschaft bereits <b>2 andere Stammspieler</b> von höheren Mannschaften auf dem Platz / im Kader?", [
+            { text: "Ja (Limit erreicht)", action: () => goToStep(() => showResult(false, "Nicht spielberechtigt!", "Ziffer 5 Abs. 1: Es dürfen maximal zwei Stammspieler aus höheren Mannschaften gleichzeitig eingesetzt werden. Dieses Limit ist erreicht.")) },
+            { text: "Nein (0 oder 1 anderer)", action: () => goToStep(askQ10), secondary: true }
+        ]);
+    }
+
+    // --- PHASE 5: Wartefristen ---
+    function askQ10() {
+        showQuestion("📺 War das letzte Spiel ein Einsatz in der <b>3. Liga, Regionalliga oder Oberliga</b>?", [
+            { text: "Ja (Profi/Halbprofi-Ligen)", action: () => goToStep(askQ10_endspurt) },
+            { text: "Nein (Darunter liegende Ligen)", action: () => goToStep(() => askForDates(5)), secondary: true }
+        ]);
+    }
+
+    function askQ10_endspurt() {
+        showQuestion("🏁 Ist das geplante Spiel eines der letzten 4 Punktspiele, ein Relegationsspiel oder ein Pokal-Halbfinale/Finale?", [
+            { text: "Ja (Saisonendspurt/Finals)", action: () => goToStep(() => askForDates(5)) },
+            { text: "Nein", action: () => goToStep(askQ10_u23), secondary: true }
+        ]);
+    }
+
+    function askQ10_u23() {
+        showQuestion("🎂 Hat der Spieler am 01.07. der aktuellen Saison das 23. Lebensjahr bereits vollendet?", [
+            { text: "Nein, er ist U23-Spieler", action: () => goToStep(() => askForDates(5)) },
+            { text: "Ja, er ist Ü23-Spieler", action: () => goToStep(() => askForDates(2)), secondary: true }
+        ]);
+    }
+
+    // --- Datums-Rechner ---
+    function calculateWaitPeriod() {
+        const lastDateStr = document.getElementById('last-match-date').value;
+        const plannedDateStr = document.getElementById('planned-match-date').value;
+
+        if (!lastDateStr || !plannedDateStr) {
+            alert("Bitte beide Daten auswählen!");
+            return;
+        }
+
+        const lastDate = new Date(lastDateStr);
+        const plannedDate = new Date(plannedDateStr);
+        
+        lastDate.setHours(0,0,0,0);
+        plannedDate.setHours(0,0,0,0);
+
+        const diffTime = plannedDate.getTime() - lastDate.getTime();
+        const diffDays = diffTime / (1000 * 3600 * 24);
+
+        if (diffDays <= 0) {
+            goToStep(() => showResult(false, "Datumsfehler!", "Das geplante Spiel muss zeitlich nach dem letzten Spiel liegen."));
+            return;
+        }
+
+        // Tag nach dem Spiel ist Tag 1.
+        if (diffDays > requiredWaitDays) {
+            goToStep(() => showResult(true, "Spielberechtigt!", `Die Frist wurde eingehalten. Es liegen ${diffDays - 1} volle Pausentage dazwischen. Die Vorgabe von ${requiredWaitDays} Tag(en) ist erfüllt.`));
+        } else {
+            goToStep(() => showResult(false, "Sperre aktiv!", `Die Wartefrist von ${requiredWaitDays} Tagen ist nicht erfüllt. <br><br>Es liegen nur ${diffDays - 1} volle Pausentage dazwischen. Der Spieler darf erst am <b>${addDays(lastDate, requiredWaitDays + 1).toLocaleDateString('de-DE')}</b> wieder spielen.`));
+        }
+    }
+
+    function addDays(date, days) {
+        const result = new Date(date);
+        result.setDate(result.getDate() + days);
+        return result;
+    }
+
+    startWizard();
+</script>
+</body>
+</html>
