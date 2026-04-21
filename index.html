@@ -77,6 +77,7 @@
             border-radius: 6px;
             border-left: 4px solid var(--primary);
             text-align: left;
+            box-sizing: border-box;
         }
 
         .btn-group {
@@ -102,12 +103,9 @@
             gap: 10px;
         }
 
-        button:active {
-            transform: scale(0.98);
-        }
-
+        button:active { transform: scale(0.98); }
         button:hover { background-color: var(--primary-hover); }
-        
+
         button.btn-secondary { background-color: var(--secondary); }
         button.btn-secondary:hover { background-color: var(--secondary-hover); }
 
@@ -118,7 +116,7 @@
             border-radius: 10px;
             margin-top: 10px;
         }
-        
+
         .result.success {
             display: block;
             background-color: #d4edda;
@@ -133,8 +131,8 @@
             border: 2px solid #f5c6cb;
         }
 
-        .result h2 { margin-top: 0; display: flex; align-items: center; gap: 10px; font-size: 1.4rem;}
-        
+        .result h2 { margin-top: 0; display: flex; align-items: center; gap: 10px; font-size: 1.4rem; }
+
         .info-alert {
             background-color: #fff3cd;
             color: #856404;
@@ -143,6 +141,7 @@
             margin-top: 15px;
             font-size: 0.9rem;
             border-left: 4px solid var(--warning);
+            box-sizing: border-box;
         }
 
         /* Date Calculator */
@@ -157,7 +156,7 @@
         }
 
         .date-inputs label { font-weight: 600; font-size: 0.95rem; }
-        
+
         input[type="date"] {
             padding: 12px;
             font-size: 1rem;
@@ -181,7 +180,7 @@
             border-top: 1px solid #eee;
             display: none;
         }
-        
+
         #back-btn {
             background-color: transparent;
             color: var(--secondary);
@@ -191,14 +190,13 @@
             justify-content: center;
         }
         #back-btn:hover { background-color: #f8f9fa; }
-
     </style>
 </head>
 <body>
 
 <div class="card">
     <h1>⚖️ Spielberechtigungs-Check</h1>
-    <div class="subtitle">Interaktiver Assistent für §27 & §12 TFV</div>
+    <div class="subtitle">Interaktiver Assistent für §27 &amp; §12 TFV</div>
 
     <div id="wizard">
         <div id="question-container">Lade Frage...</div>
@@ -233,17 +231,20 @@
 
 <script>
     const questionContainer = document.getElementById('question-container');
-    const optionsContainer = document.getElementById('options-container');
-    const wizardDiv = document.getElementById('wizard');
-    const resultContainer = document.getElementById('result-container');
-    const resultTitle = document.getElementById('result-title');
-    const resultMessage = document.getElementById('result-message');
+    const optionsContainer  = document.getElementById('options-container');
+    const wizardDiv         = document.getElementById('wizard');
+    const resultContainer   = document.getElementById('result-container');
+    const resultTitle       = document.getElementById('result-title');
+    const resultMessage     = document.getElementById('result-message');
     const dateCalculatorDiv = document.getElementById('date-calculator');
-    const dateMessage = document.getElementById('date-message');
-    const backBtnContainer = document.getElementById('back-btn-container');
+    const dateMessage       = document.getElementById('date-message');
+    const backBtnContainer  = document.getElementById('back-btn-container');
 
     let requiredWaitDays = 0;
-    let historyStack = []; 
+    let historyStack = [];
+    
+    // NEU: Wir merken uns, ob es ein Pflichtspiel ist, um später Wartefristen zu überspringen
+    let isPflichtspiel = true; 
 
     function goToStep(stepFunc) {
         historyStack.push(stepFunc);
@@ -252,50 +253,51 @@
 
     function goBack() {
         if (historyStack.length > 1) {
-            historyStack.pop(); 
-            renderCurrentStep(); 
+            historyStack.pop();
+            renderCurrentStep();
         }
     }
 
     function renderCurrentStep() {
         const currentStepFunc = historyStack[historyStack.length - 1];
-        currentStepFunc(); 
+        currentStepFunc();
         backBtnContainer.style.display = (historyStack.length > 1) ? 'block' : 'none';
     }
 
     function startWizard() {
         historyStack = [];
-        document.getElementById('last-match-date').value = '';
+        isPflichtspiel = true; // Reset Status
+        document.getElementById('last-match-date').value  = '';
         document.getElementById('planned-match-date').value = '';
         goToStep(askQ1);
     }
 
     function showQuestion(text, options) {
-        wizardDiv.style.display = 'block';
-        resultContainer.className = 'result'; 
-        dateCalculatorDiv.style.display = 'none'; 
-        
+        wizardDiv.style.display       = 'block';
+        resultContainer.className     = 'result';
+        dateCalculatorDiv.style.display = 'none';
+
         questionContainer.innerHTML = text;
-        optionsContainer.innerHTML = '';
+        optionsContainer.innerHTML  = '';
         options.forEach(opt => {
             const btn = document.createElement('button');
             btn.innerHTML = opt.text;
-            if(opt.secondary) btn.className = 'btn-secondary';
+            if (opt.secondary) btn.className = 'btn-secondary';
             btn.onclick = opt.action;
             optionsContainer.appendChild(btn);
         });
     }
 
     function showResult(isAllowed, title, message, infoBox = "") {
-        wizardDiv.style.display = 'none';
+        wizardDiv.style.display         = 'none';
         dateCalculatorDiv.style.display = 'none';
-        resultContainer.className = isAllowed ? 'result success' : 'result danger';
-        
-        let icon = isAllowed ? "✅" : "❌";
+        resultContainer.className       = isAllowed ? 'result success' : 'result danger';
+
+        const icon = isAllowed ? "✅" : "❌";
         resultTitle.innerHTML = `${icon} ${title}`;
-        
+
         let finalMessage = message;
-        if(infoBox) {
+        if (infoBox) {
             finalMessage += `<div class="info-alert">⚠️ <b>Wichtiger Hinweis:</b><br>${infoBox}</div>`;
         }
         resultMessage.innerHTML = finalMessage;
@@ -303,154 +305,257 @@
 
     function askForDates(days) {
         requiredWaitDays = days;
-        wizardDiv.style.display = 'none';
-        resultContainer.className = 'result'; 
+        wizardDiv.style.display         = 'none';
+        resultContainer.className       = 'result';
         dateCalculatorDiv.style.display = 'block';
         dateMessage.innerText = `⏳ Es gilt eine Wartefrist von ${days} Tag(en)!`;
-        
+
         const plannedInput = document.getElementById('planned-match-date');
         if (!plannedInput.value) {
             plannedInput.valueAsDate = new Date();
         }
     }
 
-    // --- PHASE 1: Grundlagen ---
+    // ─── PHASE 1: Grundlagen & Sperren ────────────────────────────────────────
+
     function askQ1() {
         showQuestion("🟥 Sitzt der Spieler aktuell eine Sperrstrafe ab? (z.B. Rot, Gelb-Rot, Sportgericht)", [
-            { text: "Ja, er ist gesperrt", action: () => goToStep(() => showResult(false, "Nicht spielberechtigt!", "Ziffer 10 Abs. 5: Eine Sperrstrafe ist vorab zu verbüßen.")) },
-            { text: "Nein, keine Sperre aktiv", action: () => goToStep(askQ2), secondary: true }
+            { text: "Ja, er ist gesperrt",
+              action: () => goToStep(askQ1_scope) },
+            { text: "Nein, keine Sperre aktiv",
+              action: () => goToStep(askQ_GameType), secondary: true }
         ]);
     }
 
-    function askQ2() {
-        showQuestion("⚽ Ist das geplante Spiel ein Pflichtspiel?", [
-            { text: "Ja, es geht um Punkte/Pokal", action: () => goToStep(askQ3) },
-            { text: "Nein, Freundschafts-/Testspiel", action: () => goToStep(() => showResult(true, "Spielberechtigt!", "Die Regelungen zu Wartefristen gelten nicht für Freundschaftsspiele.")), secondary: true }
+    function askQ1_scope() {
+        showQuestion(`🔍 Gilt diese Sperre ausdrücklich auch für <b>Freundschafts- und Testspiele</b>?
+            <div class="hint-box">Hinweis: Feldverweise auf Dauer (Glatt Rot) oder Urteile des Sportgerichts gelten oft für alle Spielarten. Gelb-Rot-Sperren gelten meist nur für das nächste Pflichtspiel.</div>`, [
+            { text: "Ja, er ist für ALLE Spiele gesperrt",
+              action: () => goToStep(() => showResult(false, "Nicht spielberechtigt!",
+                  "Die aktive Sperre schließt Freundschaftsspiele mit ein und ist vorab vollständig zu verbüßen.")) },
+            { text: "Nein, die Sperre gilt NUR für Pflichtspiele",
+              action: () => goToStep(askQ2_suspended), secondary: true }
         ]);
     }
 
-    // --- PHASE 2: Jugend oder Erwachsene ---
+    function askQ2_suspended() {
+        showQuestion("⚽ Handelt es sich bei dem geplanten Spiel um ein <b>Pflichtspiel</b> oder ein <b>Freundschaftsspiel</b>?", [
+            { text: "Es ist ein Pflichtspiel (Punkte/Pokal)",
+              action: () => { 
+                  isPflichtspiel = true; 
+                  goToStep(() => showResult(false, "Nicht spielberechtigt!", "Der Spieler ist aktuell für Pflichtspiele gesperrt. Diese Sperre muss erst verbüßt werden.")); 
+              } 
+            },
+            { text: "Es ist ein Freundschaftsspiel/Testspiel",
+              action: () => { 
+                  isPflichtspiel = false; 
+                  goToStep(askQ3); // Wir springen zur Jugendprüfung, überspringen aber später Wartefristen
+              } 
+            }
+        ]);
+    }
+
+    function askQ_GameType() {
+        showQuestion("⚽ Handelt es sich bei dem geplanten Spiel um ein <b>Pflichtspiel</b> oder ein <b>Freundschaftsspiel</b>?", [
+            { text: "Ja, es geht um Punkte / Pokal (Pflichtspiel)",
+              action: () => { isPflichtspiel = true; goToStep(askQ3); } },
+            { text: "Nein, Freundschafts-/Testspiel",
+              action: () => { isPflichtspiel = false; goToStep(askQ3); }, secondary: true }
+        ]);
+    }
+
+    // ─── PHASE 2: Jugend oder Erwachsene ────────────────────────────────────
+
     function askQ3() {
         showQuestion("👤 In welchem Altersbereich befindet sich der Spieler grundsätzlich?", [
-            { text: "👦 Nachwuchs (Junioren/Juniorinnen)", action: () => goToStep(askQ4) },
-            { text: "👨 Senior (Männer/Frauen)", action: () => goToStep(askQ7), secondary: true }
+            { text: "👦 Nachwuchs (Junioren / Juniorinnen)",
+              action: () => goToStep(askQ4) },
+            { text: "👨 Senior (Männer / Frauen)",
+              action: () => {
+                  // Wenn Senior und Freundschaftsspiel = Sofort frei!
+                  if (!isPflichtspiel) {
+                      goToStep(() => showResult(true, "Spielberechtigt!", "Wartefristen nach §27 gelten nicht für Freundschaftsspiele."));
+                  } else {
+                      goToStep(askQ7); // Pflichtspiel -> Weiter zu Liga-Wechsel
+                  }
+              }, secondary: true }
         ]);
     }
 
-    // --- PHASE 3: Nachwuchs ---
+    // ─── PHASE 3: Nachwuchs (Gilt IMMER, auch für Freundschaftsspiele!) ──────
+
     function askQ4() {
         showQuestion("⏰ Hat der Spieler am <b>heutigen Kalendertag</b> bereits ein Spiel absolviert?", [
-            { text: "Ja, er hat heute schon gespielt", action: () => goToStep(askQ4_age) },
-            { text: "Nein", action: () => goToStep(askQ5), secondary: true }
+            { text: "Ja, er hat heute schon gespielt",
+              action: () => goToStep(askQ4_age) },
+            { text: "Nein",
+              action: () => goToStep(askQ5), secondary: true }
         ]);
     }
 
     function askQ4_age() {
-        showQuestion("🎂 Hat der Spieler das 17. Lebensjahr bereits vollendet (ist also mind. 17 Jahre alt)?", [
-            { text: "Ja (≥ 17 Jahre)", action: () => goToStep(askQ5) },
-            { text: "Nein (Jünger als 17)", action: () => goToStep(() => showResult(false, "Nicht spielberechtigt!", "Ziffer 9 Abs. 1: Spieler unter 17 Jahren dürfen am gleichen Kalendertag nur an einem einzigen Spiel teilnehmen.")), secondary: true }
+        showQuestion("🎂 Hat der Spieler das 17. Lebensjahr bereits vollendet (ist also mindestens 17 Jahre alt)?", [
+            { text: "Ja (≥ 17 Jahre)",
+              action: () => goToStep(askQ5) },
+            { text: "Nein (jünger als 17)",
+              action: () => goToStep(() => showResult(false, "Nicht spielberechtigt!",
+                  "Ziffer 9 Abs. 1: Spieler unter 17 Jahren dürfen am gleichen Kalendertag nur an einem einzigen Spiel teilnehmen. Das gilt auch für Freundschaftsspiele!")),
+              secondary: true }
         ]);
     }
 
     function askQ5() {
         showQuestion("🏟️ Wo soll der Nachwuchsspieler <b>heute</b> eingesetzt werden?", [
-            { text: "👦 In einer Junioren-Mannschaft", action: () => goToStep(askQ6) },
-            { text: "👨 In einer Senioren-Mannschaft", action: () => goToStep(askQ5_sonderspielrecht), secondary: true }
+            { text: "👦 In einer Junioren-Mannschaft",
+              action: () => {
+                  if (!isPflichtspiel) goToStep(() => showResult(true, "Spielberechtigt!", "Wartefristen nach §27 gelten nicht für Freundschaftsspiele."));
+                  else goToStep(askQ6);
+              }},
+            { text: "👨 In einer Senioren-Mannschaft",
+              action: () => goToStep(askQ5_sonderspielrecht), secondary: true }
         ]);
     }
 
     function askQ5_sonderspielrecht() {
         showQuestion("📜 Besitzt der Spieler ein im DFBnet eingetragenes <b>Sonderspielrecht</b> für den Erwachsenenbereich?", [
-            { text: "Ja, ist offiziell eingetragen", action: () => goToStep(askQ5_art) },
-            { text: "Nein", action: () => goToStep(() => showResult(false, "Nicht spielberechtigt!", "§12 Spielordnung: Junioren dürfen <b>ausschließlich</b> mit einem im DFBnet eingetragenen Sonderspielrecht im Erwachsenenbereich eingesetzt werden.")), secondary: true }
+            { text: "Ja, ist offiziell eingetragen",
+              action: () => goToStep(askQ5_art) },
+            { text: "Nein",
+              action: () => goToStep(() => showResult(false, "Nicht spielberechtigt!",
+                  "§12 Spielordnung: Junioren dürfen <b>ausschließlich</b> mit einem im DFBnet eingetragenen Sonderspielrecht im Erwachsenenbereich eingesetzt werden. Dies gilt auch für Freundschaftsspiele!")),
+              secondary: true }
         ]);
     }
 
     function askQ5_art() {
         showQuestion("🔄 Wie ist das Verhältnis des Spielers zum Senioren-Bereich?", [
-            { text: "Er ist eigentlich Junior und hilft heute bei den Senioren aus (Altersklassenwechsel)", action: () => goToStep(() => showResult(true, "Spielberechtigt!", "Ziffer 6 Abs. 2: Bei einem Altersklassenwechsel entfallen die Wartefristen.", "Wegen der Verwendung des Juniors bei den Senioren darf nach §12 Abs. 8 <b>kein Juniorenspiel</b> dieses Vereins abgesetzt werden!")) },
-            { text: "Er spielt dauerhaft bei den Senioren und wechselt heute z.B. von der 1. in die 2. Männer", action: () => goToStep(askQ7), secondary: true }
+            { text: "Er ist Junior und hilft heute bei den Senioren aus (Altersklassenwechsel)",
+              action: () => goToStep(() => showResult(true, "Spielberechtigt!",
+                  "Ziffer 6 Abs. 2: Bei einem Altersklassenwechsel entfallen die Wartefristen.",
+                  "Wegen der Verwendung des Juniors bei den Senioren darf nach §12 Abs. 8 <b>kein Juniorenspiel</b> dieses Vereins abgesetzt werden!")) },
+            { text: "Er spielt dauerhaft bei den Senioren und wechselt heute z.B. von der 1. in die 2. Männer",
+              action: () => {
+                  if (!isPflichtspiel) goToStep(() => showResult(true, "Spielberechtigt!", "Wartefristen nach §27 gelten nicht für Freundschaftsspiele."));
+                  else goToStep(askQ7);
+              }, secondary: true }
         ]);
     }
 
     function askQ6() {
         showQuestion("🏆 Kam der Spieler in seinem letzten Pflichtspiel in der <b>A- oder B-Junioren-Bundesliga</b> zum Einsatz?", [
-            { text: "Ja, Bundesliga", action: () => goToStep(askQ6_stamm) },
-            { text: "Nein", action: () => goToStep(askQ7), secondary: true }
+            { text: "Ja, Bundesliga",
+              action: () => goToStep(askQ6_stamm) },
+            { text: "Nein",
+              action: () => goToStep(askQ7), secondary: true }
         ]);
     }
 
     function askQ6_stamm() {
         showQuestion(`⭐ Hat der Spieler in der Bundesliga bereits <b>Stammspieler-Status</b>?
-            <div class="hint-box">Bedingung: Das 4. Saisonspiel ist absolviert <b>UND</b> er kam in >50% aller Spiele zum Einsatz.</div>`, [
-            { text: "Ja, er hat den Status erreicht", action: () => goToStep(askQ6_benched) },
-            { text: "Nein (Status noch nicht erreicht)", action: () => goToStep(() => askForDates(2)), secondary: true }
+            <div class="hint-box">Bedingung: Das 4. Saisonspiel ist absolviert <b>UND</b> er kam in mehr als 50 % aller Spiele zum Einsatz.</div>`, [
+            { text: "Ja, er hat den Status erreicht",
+              action: () => goToStep(askQ6_benched) },
+            { text: "Nein (Status noch nicht erreicht)",
+              action: () => goToStep(() => askForDates(2)), secondary: true }
         ]);
     }
 
     function askQ6_benched() {
-        showQuestion("🪑 Saß dieser Stammspieler in den letzten 2 Ligaspielen <b>in Folge</b> nur auf der Bank (ohne Einsatz)?", [
-            { text: "Ja (Dadurch Status verloren!)", action: () => goToStep(() => askForDates(2)) },
-            { text: "Nein (Er ist aktiver Stammspieler)", action: () => goToStep(() => showResult(false, "Nicht spielberechtigt!", "Ziffer 10 Abs. 1: Stammspieler einer A-/B-Junioren-Bundesliga-Mannschaft sind für alle unterklassigen Mannschaften ihres Vereins gesperrt.")), secondary: true }
+        showQuestion(`🪑 Saß dieser Stammspieler in den letzten 2 Ligaspielen <b>in Folge</b> auf der Bank (ohne Einsatz)?
+            <div class="hint-box">Ziffer 10 Abs. 2: Der Statusverlust gilt nur für Spiele, in denen er spielberechtigt gewesen wäre. Spiele während einer Sperre oder Verletzung zählen <b>nicht</b> als Nicht-Einsatz.</div>`, [
+            { text: "Ja (Stammspieler-Status dadurch verloren)",
+              action: () => goToStep(() => askForDates(2)) },
+            { text: "Nein (er ist aktiver Stammspieler)",
+              action: () => goToStep(() => showResult(false, "Nicht spielberechtigt!",
+                  "Ziffer 10 Abs. 1: Stammspieler einer A-/B-Junioren-Bundesliga-Mannschaft sind für alle unterklassigen Mannschaften ihres Vereins gesperrt.")),
+              secondary: true }
         ]);
     }
 
-    // --- PHASE 4: Liga-Wechsel ---
+    // ─── PHASE 4: Liga-Wechsel (Nur bei Pflichtspielen erreicht) ─────────────
+
     function askQ7() {
-        showQuestion(`📈 Soll der Spieler in einer sportlich <b>höheren</b> oder <b>tieferen</b> Mannschaft eingesetzt werden (im Vergleich zu seinem letzten Spiel)?
-            <div class="hint-box">Innerhalb der gleichen Liga zählt:<br>2. ➔ 1. Mannschaft = Höher<br>1. ➔ 2. Mannschaft = Tiefer</div>`, [
-            { text: "⬆️ Höher (oder von 2 in 1)", action: () => goToStep(() => showResult(true, "Spielberechtigt!", "Ziffer 2: Der Einsatz in einer sportlich höherwertigen Mannschaft ist ohne Wartefrist möglich.")) },
-            { text: "⬇️ Tiefer (oder von 1 in 2)", action: () => goToStep(askQ8), secondary: true }
+        showQuestion(`📈 Soll der Spieler in einer <b>höheren</b> oder <b>tieferen</b> Mannschaft eingesetzt werden (im Vergleich zu seinem letzten Spiel)?
+            <div class="hint-box">
+                <b>Gleiche Spielklasse:</b><br>
+                2. ➔ 1. Mannschaft = gilt als <b>höher</b> (keine Wartefrist)<br>
+                1. ➔ 2. Mannschaft = gilt als <b>tiefer</b> (Wartefrist prüfen)<br><br>
+                <b>Verschiedene Ligen:</b><br>
+                Unterklassige ➔ höherklassige Liga = höher<br>
+                Höherklassige ➔ unterklassige Liga = tiefer
+            </div>`, [
+            { text: "⬆️ Höher (inkl. 2. ➔ 1. gleiche Liga)",
+              action: () => goToStep(() => showResult(true, "Spielberechtigt!",
+                  "Ziffer 2: Der Einsatz in einer sportlich höherwertigen Mannschaft ist ohne Wartefrist möglich.")) },
+            { text: "⬇️ Tiefer (inkl. 1. ➔ 2. gleiche Liga)",
+              action: () => goToStep(askQ8), secondary: true }
         ]);
     }
 
     function askQ8() {
         showQuestion("⏱️ Wurde der Spieler in seinem letzten Pflichtspiel (in der höheren Mannschaft) <b>nur eingewechselt</b>?", [
-            { text: "Ja, kam von der Bank", action: () => goToStep(() => showResult(true, "Spielberechtigt!", "Ziffer 4 Abs. 1: Wer im letzten Spiel nur eingewechselt wurde, hat keine neue Wartefrist.", "Falls aus einem früheren Spiel noch eine alte 5-Tage-Frist läuft, wird diese durch die Einwechslung <b>nicht</b> aufgehoben (Ziffer 4 Abs. 2).")) },
-            { text: "Nein, stand in der Startelf", action: () => goToStep(askQ9), secondary: true }
+            { text: "Ja, kam von der Bank",
+              action: () => goToStep(() => showResult(true, "Spielberechtigt!",
+                  "Ziffer 4 Abs. 1: Wer im letzten Spiel nur eingewechselt wurde, hat keine neue Wartefrist.",
+                  "Falls aus einem früheren Spiel noch eine alte 5-Tage-Frist läuft, wird diese durch die Einwechslung <b>nicht</b> aufgehoben (Ziffer 4 Abs. 2).")) },
+            { text: "Nein, stand in der Startelf",
+              action: () => goToStep(askQ9), secondary: true }
         ]);
     }
 
     function askQ9() {
         showQuestion(`⭐ Ist der Spieler <b>selbst</b> Stammspieler der höheren Mannschaft?
-            <div class="hint-box">In >50% der Spiele eingesetzt (Einwechslungen zählen mit!). Vor dem 1. Spieltag der neuen Saison zählt die Vorsaison.</div>`, [
-            { text: "Ja, er ist Stammspieler", action: () => goToStep(askQ9_andere) },
-            { text: "Nein, er ist kein Stammspieler", action: () => goToStep(askQ10), secondary: true }
+            <div class="hint-box">In mehr als 50 % der Punktspiele eingesetzt (Einwechslungen zählen mit!). Vor dem 1. Spieltag der neuen Saison gilt der Abschlussstand der Vorsaison.</div>`, [
+            { text: "Ja, er ist Stammspieler",
+              action: () => goToStep(askQ9_andere) },
+            { text: "Nein, er ist kein Stammspieler",
+              action: () => goToStep(askQ10), secondary: true }
         ]);
     }
 
     function askQ9_andere() {
         showQuestion("👥 Stehen in der heutigen (tieferen) Mannschaft bereits <b>2 andere Stammspieler</b> von höheren Mannschaften auf dem Platz / im Kader?", [
-            { text: "Ja (Limit erreicht)", action: () => goToStep(() => showResult(false, "Nicht spielberechtigt!", "Ziffer 5 Abs. 1: Es dürfen maximal zwei Stammspieler aus höheren Mannschaften gleichzeitig eingesetzt werden. Dieses Limit ist erreicht.")) },
-            { text: "Nein (0 oder 1 anderer)", action: () => goToStep(askQ10), secondary: true }
+            { text: "Ja (Limit erreicht)",
+              action: () => goToStep(() => showResult(false, "Nicht spielberechtigt!",
+                  "Ziffer 5 Abs. 1: Es dürfen maximal zwei Stammspieler aus höheren Mannschaften gleichzeitig eingesetzt werden. Dieses Limit ist erreicht.")) },
+            { text: "Nein (0 oder 1 anderer)",
+              action: () => goToStep(askQ10), secondary: true }
         ]);
     }
 
-    // --- PHASE 5: Wartefristen ---
+    // ─── PHASE 5: Wartefristen ───────────────────────────────────────────────
+
     function askQ10() {
         showQuestion("📺 War das letzte Spiel ein Einsatz in der <b>3. Liga, Regionalliga oder Oberliga</b>?", [
-            { text: "Ja (Profi/Halbprofi-Ligen)", action: () => goToStep(askQ10_endspurt) },
-            { text: "Nein (Darunter liegende Ligen)", action: () => goToStep(() => askForDates(5)), secondary: true }
+            { text: "Ja (Profi-/Halbprofi-Ligen)",
+              action: () => goToStep(askQ10_endspurt) },
+            { text: "Nein (darunter liegende Ligen)",
+              action: () => goToStep(() => askForDates(5)), secondary: true }
         ]);
     }
 
     function askQ10_endspurt() {
-        showQuestion("🏁 Ist das geplante Spiel eines der letzten 4 Punktspiele, ein Relegationsspiel oder ein Pokal-Halbfinale/Finale?", [
-            { text: "Ja (Saisonendspurt/Finals)", action: () => goToStep(() => askForDates(5)) },
-            { text: "Nein", action: () => goToStep(askQ10_u23), secondary: true }
+        showQuestion("🏁 Ist das geplante Spiel eines der letzten 4 Punktspiele, ein Relegationsspiel oder ein Pokal-Halbfinale / Finale?", [
+            { text: "Ja (Saisonendspurt / Finals)",
+              action: () => goToStep(() => askForDates(5)) },
+            { text: "Nein",
+              action: () => goToStep(askQ10_u23), secondary: true }
         ]);
     }
 
     function askQ10_u23() {
         showQuestion("🎂 Hat der Spieler am 01.07. der aktuellen Saison das 23. Lebensjahr bereits vollendet?", [
-            { text: "Nein, er ist U23-Spieler", action: () => goToStep(() => askForDates(5)) },
-            { text: "Ja, er ist Ü23-Spieler", action: () => goToStep(() => askForDates(2)), secondary: true }
+            { text: "Nein, er ist U23-Spieler",
+              action: () => goToStep(() => askForDates(5)) },
+            { text: "Ja, er ist Ü23-Spieler",
+              action: () => goToStep(() => askForDates(2)), secondary: true }
         ]);
     }
 
-    // --- Datums-Rechner ---
+    // ─── Datums-Rechner ──────────────────────────────────────────────────────
+
     function calculateWaitPeriod() {
-        const lastDateStr = document.getElementById('last-match-date').value;
+        const lastDateStr    = document.getElementById('last-match-date').value;
         const plannedDateStr = document.getElementById('planned-match-date').value;
 
         if (!lastDateStr || !plannedDateStr) {
@@ -458,25 +563,29 @@
             return;
         }
 
-        const lastDate = new Date(lastDateStr);
+        const lastDate    = new Date(lastDateStr);
         const plannedDate = new Date(plannedDateStr);
-        
+
         lastDate.setHours(0,0,0,0);
         plannedDate.setHours(0,0,0,0);
 
-        const diffTime = plannedDate.getTime() - lastDate.getTime();
-        const diffDays = diffTime / (1000 * 3600 * 24);
+        const diffDays = (plannedDate.getTime() - lastDate.getTime()) / (1000 * 3600 * 24);
 
         if (diffDays <= 0) {
-            goToStep(() => showResult(false, "Datumsfehler!", "Das geplante Spiel muss zeitlich nach dem letzten Spiel liegen."));
+            goToStep(() => showResult(false, "Datumsfehler!",
+                "Das geplante Spiel muss zeitlich nach dem letzten Spiel liegen."));
             return;
         }
 
-        // Tag nach dem Spiel ist Tag 1.
+        // Tag nach dem Spiel = Tag 1 der Wartefrist
         if (diffDays > requiredWaitDays) {
-            goToStep(() => showResult(true, "Spielberechtigt!", `Die Frist wurde eingehalten. Es liegen ${diffDays - 1} volle Pausentage dazwischen. Die Vorgabe von ${requiredWaitDays} Tag(en) ist erfüllt.`));
+            goToStep(() => showResult(true, "Spielberechtigt!",
+                `Die Frist wurde eingehalten. Es liegen ${diffDays - 1} volle Pausentage dazwischen. Die Vorgabe von ${requiredWaitDays} Tag(en) ist erfüllt.`));
         } else {
-            goToStep(() => showResult(false, "Sperre aktiv!", `Die Wartefrist von ${requiredWaitDays} Tagen ist nicht erfüllt. <br><br>Es liegen nur ${diffDays - 1} volle Pausentage dazwischen. Der Spieler darf erst am <b>${addDays(lastDate, requiredWaitDays + 1).toLocaleDateString('de-DE')}</b> wieder spielen.`));
+            goToStep(() => showResult(false, "Sperre aktiv!",
+                `Die Wartefrist von ${requiredWaitDays} Tagen ist nicht erfüllt.<br><br>` +
+                `Es liegen nur ${diffDays - 1} volle Pausentage dazwischen. ` +
+                `Der Spieler darf erst am <b>${addDays(lastDate, requiredWaitDays + 1).toLocaleDateString('de-DE')}</b> wieder spielen.`));
         }
     }
 
